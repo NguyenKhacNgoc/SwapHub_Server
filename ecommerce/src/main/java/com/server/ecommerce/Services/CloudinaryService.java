@@ -2,6 +2,7 @@ package com.server.ecommerce.Services;
 
 import com.cloudinary.*;
 import com.cloudinary.utils.ObjectUtils;
+import com.server.ecommerce.DTO.ImageUploadResponse;
 
 import org.springframework.stereotype.Service;
 
@@ -10,14 +11,25 @@ import java.util.Map;
 
 @Service
 public class CloudinaryService {
+    private Cloudinary cloudinary;
 
-    public String uploadImage(byte[] fileBytes) throws IOException {
-        Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+    public CloudinaryService() {
+        cloudinary = new Cloudinary(ObjectUtils.asMap(
                 "cloud_name", "dm1tojcmv",
                 "api_key", "694428189624197",
                 "api_secret", "H1P7bbDsfP0sqqb0oDqVcDySuPQ"));
+    }
 
+    public ImageUploadResponse uploadImage(byte[] fileBytes) throws IOException {
         Map<?, ?> uploadResult = cloudinary.uploader().upload(fileBytes, ObjectUtils.emptyMap());
-        return (String) uploadResult.get("secure_url");
+        String secureUrl = (String) uploadResult.get("secure_url");
+        String publicID = (String) uploadResult.get("public_id");
+
+        return new ImageUploadResponse(publicID, secureUrl);
+    }
+
+    public void deleteImage(String publicID) throws IOException {
+        cloudinary.uploader().destroy(publicID, ObjectUtils.emptyMap());
+
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.server.ecommerce.DTO.ImageUploadResponse;
 import com.server.ecommerce.Entity.Images;
 import com.server.ecommerce.Entity.Posts;
 import com.server.ecommerce.Entity.User;
@@ -58,8 +59,11 @@ public class CreatePostController {
 
                 // Đẩy hình ảnh lên cloudinary và return về url
                 for (MultipartFile image : images) {
-                    String imgUrl = cloudinaryService.uploadImage(image.getBytes());
+                    ImageUploadResponse imageUploadResponse = cloudinaryService.uploadImage(image.getBytes());
+                    String publicID = imageUploadResponse.getPublicID();
+                    String imgUrl = imageUploadResponse.getSecureUrl();
                     Images img = new Images();
+                    img.setPublicID(publicID);
                     img.setImgUrl(imgUrl);
                     img.setPost(post);
                     imageRespository.save(img);
