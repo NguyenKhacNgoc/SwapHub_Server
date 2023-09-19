@@ -4,6 +4,9 @@ public class ImageUploadResponse {
     private String publicID;
     private String secureUrl;
 
+    public ImageUploadResponse() {
+    }
+
     public ImageUploadResponse(String publicID, String secureUrl) {
         this.publicID = publicID;
         this.secureUrl = secureUrl;
