@@ -105,6 +105,7 @@ public class PostController {
                 postResponseDTO.setEmail(post.getUser().getEmail());
                 postResponseDTO.setPrice(post.getPrice());
                 postResponseDTO.setTitle(post.getTitle());
+                // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
                 postResponseDTO.setImages(
                         cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
                 postResponseDTOs.add(postResponseDTO);
