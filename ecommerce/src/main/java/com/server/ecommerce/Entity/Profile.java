@@ -27,7 +27,7 @@ public class Profile {
     @JoinColumn(name = "user_id")
     private User user;
     @Column
-    private String fullname;
+    private String fullName;
     @Column
     private String phoneNumber;
     @Column

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.ecommerce.Entity.User;
@@ -37,7 +38,40 @@ public class ProfileController {
             User user = userRespository.findByEmail(email).get();
             Optional<Profile> existingUser = profileRespository.findByUser(user);
             if (existingUser.isPresent()) {
-                return ResponseEntity.ok(existingUser.get());
+                ProfileDTO profileDTO = new ProfileDTO();
+                profileDTO.setAddress(existingUser.get().getAddress());
+                profileDTO.setDateofbirth(existingUser.get().getDateofbirth());
+                profileDTO.setFullName(existingUser.get().getFullName());
+                profileDTO.setEmail(existingUser.get().getUser().getEmail());
+                profileDTO.setPhoneNumber(existingUser.get().getPhoneNumber());
+                profileDTO.setSex(existingUser.get().getSex());
+                return ResponseEntity.ok(profileDTO);
+            } else {
+                return ResponseEntity.badRequest().body("Không tìm thấy thông tin người dùng");
+            }
+
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @GetMapping("/testgetprofile")
+    public ResponseEntity<?> testgetProfile(@RequestParam("email") String email) {
+        Optional<User> exsitingU = userRespository.findByEmail(email);
+
+        if (exsitingU.isPresent()) {
+
+            User user = exsitingU.get();
+            Optional<Profile> existingUser = profileRespository.findByUser(user);
+            if (existingUser.isPresent()) {
+                ProfileDTO profileDTO = new ProfileDTO();
+                profileDTO.setAddress(existingUser.get().getAddress());
+                profileDTO.setDateofbirth(existingUser.get().getDateofbirth());
+                profileDTO.setFullName(existingUser.get().getFullName());
+                profileDTO.setEmail(existingUser.get().getUser().getEmail());
+                profileDTO.setPhoneNumber(existingUser.get().getPhoneNumber());
+                profileDTO.setSex(existingUser.get().getSex());
+                return ResponseEntity.ok(profileDTO);
             } else {
                 return ResponseEntity.badRequest().body("Không tìm thấy thông tin người dùng");
             }
@@ -57,7 +91,7 @@ public class ProfileController {
             Optional<Profile> existingUser = profileRespository.findByUser(user);
             if (existingUser.isPresent()) {
                 Profile profile = existingUser.get();
-                profile.setFullname(request.getFullname());
+                profile.setFullName(request.getFullName());
                 profile.setPhoneNumber(request.getPhoneNumber());
                 profile.setAddress(request.getAddress());
                 profile.setSex(request.getSex());

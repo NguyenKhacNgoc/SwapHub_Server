@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,13 +21,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.server.ecommerce.DTO.ImageUploadResponse;
+
 import com.server.ecommerce.DTO.PostResponseDTO;
+import com.server.ecommerce.DTO.PostUpdateDTO;
+import com.server.ecommerce.DTO.ProfileDTO;
 import com.server.ecommerce.Entity.Images;
 import com.server.ecommerce.Entity.Posts;
+import com.server.ecommerce.Entity.Profile;
 import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.JWT.JwtTokenUtil;
 import com.server.ecommerce.Respository.ImageRespository;
 import com.server.ecommerce.Respository.PostRespository;
+import com.server.ecommerce.Respository.ProfileRespository;
 import com.server.ecommerce.Respository.UserRespository;
 import com.server.ecommerce.Services.CloudinaryService;
 
@@ -42,6 +49,8 @@ public class PostController {
     private PostRespository postRespository;
     @Autowired
     private ImageRespository imageRespository;
+    @Autowired
+    private ProfileRespository profileRespository;
 
     @PostMapping("/createpost")
     public ResponseEntity<?> createPost(@RequestHeader("Authorization") String authorization,
@@ -102,9 +111,19 @@ public class PostController {
                 postResponseDTO.setId(post.getId());
                 postResponseDTO.setCategory(post.getCategory());
                 postResponseDTO.setDescription(post.getDescription());
-                postResponseDTO.setEmail(post.getUser().getEmail());
                 postResponseDTO.setPrice(post.getPrice());
                 postResponseDTO.setTitle(post.getTitle());
+
+                Profile profile = profileRespository.findByUser(user).get();
+                ProfileDTO profileDTO = new ProfileDTO();
+                profileDTO.setAddress(profile.getAddress());
+                profileDTO.setDateofbirth(profile.getDateofbirth());
+                profileDTO.setFullName(profile.getFullName());
+                profileDTO.setEmail(profile.getUser().getEmail());
+                profileDTO.setPhoneNumber(profile.getPhoneNumber());
+                profileDTO.setSex(profile.getSex());
+                postResponseDTO.setProfile(profileDTO);
+
                 // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
                 postResponseDTO.setImages(
                         cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
@@ -116,73 +135,71 @@ public class PostController {
         }
     }
 
-    @GetMapping("/testgetPost")
-    public ResponseEntity<?> testgetPost(@RequestParam("id") Long id) {
+    @PutMapping("/putPost")
+    public ResponseEntity<?> putPost(@RequestHeader("Authorization") String authorization,
+            @RequestBody PostUpdateDTO requestPut) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            String email = jwtTokenUtil.getEmailFromToken(token);
+            User user = userRespository.findByEmail(email).get();
+            Optional<Posts> existingpost = postRespository.findById(requestPut.getId());
+            if (existingpost.isPresent()) {
+                if (user.getId() == existingpost.get().getUser().getId()) {
+                    // Sửa ở đây nhé
+                    Posts post = existingpost.get();
+                    post.setDescription(requestPut.getDescription());
+                    post.setPrice(requestPut.getPrice());
+                    post.setTitle(requestPut.getTitle());
+                    postRespository.save(post);
 
-        Optional<User> user = userRespository.findById(id);
-        if (user.isPresent()) {
-            List<Posts> posts = postRespository.findByUser(user.get());
-            List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
-            for (Posts post : posts) {
-                PostResponseDTO postResponseDTO = new PostResponseDTO();
-                postResponseDTO.setId(post.getId());
-                postResponseDTO.setCategory(post.getCategory());
-                postResponseDTO.setDescription(post.getDescription());
-                postResponseDTO.setEmail(post.getUser().getEmail());
-                postResponseDTO.setPrice(post.getPrice());
-                postResponseDTO.setTitle(post.getTitle());
+                    return ResponseEntity.ok().body("Sửa bài viết thành công");
 
-                // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
-                postResponseDTO.setImages(
-                        cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
-                postResponseDTOs.add(postResponseDTO);
+                } else {
+                    return ResponseEntity.badRequest().body("Không thể sửa bài viết của người khác");
+                }
+
+            } else {
+                return ResponseEntity.badRequest().body("Bài viết này không tồn tại");
             }
-            return ResponseEntity.ok(postResponseDTOs);
+
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Xác thực thất bại");
         }
 
     }
 
     @DeleteMapping("/deletePost")
     public ResponseEntity<?> deletePost(@RequestHeader("Authorization") String authorization,
-            @RequestParam("postID") Long postID, @RequestParam("userID") Long userID) throws IOException {
+            @RequestBody PostUpdateDTO requestdelete) throws IOException {
         String token = authorization.substring(7);
         if (jwtTokenUtil.validateToken(token)) {
             String email = jwtTokenUtil.getEmailFromToken(token);
             User user = userRespository.findByEmail(email).get();
-            Optional<User> existingUdel = userRespository.findById(userID);
-            if (existingUdel.isPresent()) {
-                if (existingUdel.get().getId() == user.getId()) {
-
-                    Optional<Posts> existingPost = postRespository.findById(postID);
-                    if (existingPost.isPresent()) {
-                        List<Images> images = imageRespository.findByPost(existingPost.get());
-                        for (Images img : images) {
-                            String publicID = img.getPublicID();
-                            // Gọi cloudinaryService để xoá ảnh khỏi kho lưu trữ
-                            cloudinaryService.deleteImage(publicID);
-
-                            // Xoá hình ảnh khỏi mysql
-                            imageRespository.delete(img);
-
-                        }
-                        // Xoá bài viết khỏi cơ sở dữ liệu
-                        postRespository.deleteById(postID);
-                        return ResponseEntity.ok("Xoá thành công");
-                    } else {
-                        return ResponseEntity.badRequest().body("Bài viết này không tồn tại");
+            Optional<Posts> existingpost = postRespository.findById(requestdelete.getId());
+            if (existingpost.isPresent()) {
+                if (user.getId() == existingpost.get().getUser().getId()) {
+                    List<Images> images = imageRespository.findByPost(existingpost.get());
+                    for (Images img : images) {
+                        String publicID = img.getPublicID();
+                        // Gọi cloudinary để xoá ảnh khỏi kho lưu trữ
+                        cloudinaryService.deleteImage(publicID);
+                        // Xoá bảng hình ảnh khỏi cơ sở dữ liệu
+                        imageRespository.delete(img);
                     }
+                    // Xoá bài viết khỏi cơ sở dữ liệu
+                    postRespository.deleteById(requestdelete.getId());
+                    return ResponseEntity.ok("Bài viết đã được xoá");
 
                 } else {
-                    return ResponseEntity.badRequest().body("Bạn không phải chủ sở hữu bài viết này");
+                    return ResponseEntity.badRequest().body("Không thể xoá bài viết của người khác");
                 }
+
             } else {
-                return ResponseEntity.badRequest().body("Người dùng không tồn tại");
+                return ResponseEntity.badRequest().body("Bài viết này không tồn tại");
             }
 
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Xác thực thất bại");
         }
     }
 
