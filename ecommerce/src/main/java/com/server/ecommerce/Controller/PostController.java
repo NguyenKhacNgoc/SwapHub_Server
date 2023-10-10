@@ -99,7 +99,43 @@ public class PostController {
 
     }
 
-    @GetMapping("/getPost")
+    @GetMapping("/getallPost")
+    public ResponseEntity<?> getallPost(@RequestHeader("Authorization") String authorization) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            List<Posts> posts = postRespository.findAll();
+            List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
+            for (Posts post : posts) {
+                PostResponseDTO postResponseDTO = new PostResponseDTO();
+                postResponseDTO.setId(post.getId());
+                postResponseDTO.setCategory(post.getCategory());
+                postResponseDTO.setDescription(post.getDescription());
+                postResponseDTO.setPrice(post.getPrice());
+                postResponseDTO.setTitle(post.getTitle());
+
+                Profile profile = profileRespository.findByUser(post.getUser()).get();
+                ProfileDTO profileDTO = new ProfileDTO();
+                profileDTO.setAddress(profile.getAddress());
+                profileDTO.setDateofbirth(profile.getDateofbirth());
+                profileDTO.setFullName(profile.getFullName());
+                profileDTO.setEmail(profile.getUser().getEmail());
+                profileDTO.setPhoneNumber(profile.getPhoneNumber());
+                profileDTO.setSex(profile.getSex());
+                postResponseDTO.setProfile(profileDTO);
+
+                // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
+                postResponseDTO.setImages(
+                        cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
+                postResponseDTOs.add(postResponseDTO);
+            }
+            return ResponseEntity.ok(postResponseDTOs);
+
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @GetMapping("/getmyPost")
     public ResponseEntity<?> getPost(@RequestHeader("Authorization") String authorization) {
         String token = authorization.substring(7);
         if (jwtTokenUtil.validateToken(token)) {
@@ -201,6 +237,26 @@ public class PostController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Xác thực thất bại");
         }
+    }
+
+    @PostMapping("/checkpost")
+    public ResponseEntity<?> checkpost(@RequestHeader("Authorization") String authorization,
+            @RequestBody PostUpdateDTO request) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            String email = jwtTokenUtil.getEmailFromToken(token);
+            User user = userRespository.findByEmail(email).get();
+            Optional<Posts> existingPost = postRespository.findById(request.getId());
+            if (existingPost.isPresent()) {
+                if (user.getId() == existingPost.get().getUser().getId())
+                    return ResponseEntity.ok("OK");
+                else
+                    return ResponseEntity.ok("Not OK");
+            } else
+                return ResponseEntity.badRequest().build();
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
     }
 
 }

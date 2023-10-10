@@ -54,6 +54,20 @@ public class ProfileController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+    @GetMapping("/checkUpdateProfile")
+    public ResponseEntity<?> checkUpdateProfile(@RequestHeader("Authorization") String authorization){
+        String token = authorization.substring(7);
+        if(jwtTokenUtil.validateToken(token)){
+            String email = jwtTokenUtil.getEmailFromToken(token);
+            User user = userRespository.findByEmail(email).get();
+            Profile profile = profileRespository.findByUser(user).get();
+            if(profile.getAddress() != null && profile.getDateofbirth() !=null && profile.getFullName() !=null && profile.getPhoneNumber() != null && profile.getSex() !=null){
+                return ResponseEntity.ok("OK");
+            }
+            else return ResponseEntity.ok("Not OK");
+        }
+        else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     @GetMapping("/testgetprofile")
     public ResponseEntity<?> testgetProfile(@RequestParam("email") String email) {
