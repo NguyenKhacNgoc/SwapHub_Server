@@ -100,39 +100,34 @@ public class PostController {
     }
 
     @GetMapping("/getallPost")
-    public ResponseEntity<?> getallPost(@RequestHeader("Authorization") String authorization) {
-        String token = authorization.substring(7);
-        if (jwtTokenUtil.validateToken(token)) {
-            List<Posts> posts = postRespository.findAll();
-            List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
-            for (Posts post : posts) {
-                PostResponseDTO postResponseDTO = new PostResponseDTO();
-                postResponseDTO.setId(post.getId());
-                postResponseDTO.setCategory(post.getCategory());
-                postResponseDTO.setDescription(post.getDescription());
-                postResponseDTO.setPrice(post.getPrice());
-                postResponseDTO.setTitle(post.getTitle());
+    public ResponseEntity<?> getallPost() {
+        List<Posts> posts = postRespository.findAll();
+        List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
+        for (Posts post : posts) {
+            PostResponseDTO postResponseDTO = new PostResponseDTO();
+            postResponseDTO.setId(post.getId());
+            postResponseDTO.setCategory(post.getCategory());
+            postResponseDTO.setDescription(post.getDescription());
+            postResponseDTO.setPrice(post.getPrice());
+            postResponseDTO.setTitle(post.getTitle());
 
-                Profile profile = profileRespository.findByUser(post.getUser()).get();
-                ProfileDTO profileDTO = new ProfileDTO();
-                profileDTO.setAddress(profile.getAddress());
-                profileDTO.setDateofbirth(profile.getDateofbirth());
-                profileDTO.setFullName(profile.getFullName());
-                profileDTO.setEmail(profile.getUser().getEmail());
-                profileDTO.setPhoneNumber(profile.getPhoneNumber());
-                profileDTO.setSex(profile.getSex());
-                postResponseDTO.setProfile(profileDTO);
+            Profile profile = profileRespository.findByUser(post.getUser()).get();
+            ProfileDTO profileDTO = new ProfileDTO();
+            profileDTO.setAddress(profile.getAddress());
+            profileDTO.setDateofbirth(profile.getDateofbirth());
+            profileDTO.setFullName(profile.getFullName());
+            profileDTO.setEmail(profile.getUser().getEmail());
+            profileDTO.setPhoneNumber(profile.getPhoneNumber());
+            profileDTO.setSex(profile.getSex());
+            postResponseDTO.setProfile(profileDTO);
 
-                // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
-                postResponseDTO.setImages(
-                        cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
-                postResponseDTOs.add(postResponseDTO);
-            }
-            return ResponseEntity.ok(postResponseDTOs);
-
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
+            postResponseDTO.setImages(
+                    cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
+            postResponseDTOs.add(postResponseDTO);
         }
+        return ResponseEntity.ok(postResponseDTOs);
+
     }
 
     @GetMapping("/getmyPost")
