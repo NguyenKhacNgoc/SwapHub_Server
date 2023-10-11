@@ -1,13 +1,12 @@
 package com.server.ecommerce.Entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,21 +17,16 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Profile {
+public class Message {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
     @Column
-    private String fullName;
+    private String content;
     @Column
-    private String phoneNumber;
+    private Long senderID;
     @Column
-    private String address;
+    private Long receiverID;
     @Column
-    private String sex;
-    @Column
-    private Date dateofbirth;
-
+    private LocalDateTime sendAt;
 }

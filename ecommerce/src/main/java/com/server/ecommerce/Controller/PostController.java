@@ -113,6 +113,7 @@ public class PostController {
 
             Profile profile = profileRespository.findByUser(post.getUser()).get();
             ProfileDTO profileDTO = new ProfileDTO();
+            profileDTO.setId(profile.getId());
             profileDTO.setAddress(profile.getAddress());
             profileDTO.setDateofbirth(profile.getDateofbirth());
             profileDTO.setFullName(profile.getFullName());
@@ -147,6 +148,7 @@ public class PostController {
 
                 Profile profile = profileRespository.findByUser(user).get();
                 ProfileDTO profileDTO = new ProfileDTO();
+                profileDTO.setId(profile.getId());
                 profileDTO.setAddress(profile.getAddress());
                 profileDTO.setDateofbirth(profile.getDateofbirth());
                 profileDTO.setFullName(profile.getFullName());

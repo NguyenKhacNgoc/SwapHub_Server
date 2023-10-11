@@ -104,6 +104,7 @@ public class SignUpController {
                     tempUserRespository.delete(existingTempU.get());
                     // Tạo bảng thông tin người dùng
                     Profile profile = new Profile();
+                    profile.setId(user.getId());
                     profile.setUser(user);
                     profileRespository.save(profile);
 
