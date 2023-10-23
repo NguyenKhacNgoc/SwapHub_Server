@@ -24,6 +24,7 @@ import com.server.ecommerce.JWT.JwtTokenUtil;
 import com.server.ecommerce.Respository.MessageRespository;
 import com.server.ecommerce.Respository.ProfileRespository;
 import com.server.ecommerce.Respository.UserRespository;
+import com.server.ecommerce.Services.SSEServices;
 
 @RestController
 @RequestMapping("/api/message")
@@ -36,6 +37,8 @@ public class MessageController {
     private UserRespository userRespository;
     @Autowired
     private ProfileRespository profileRespository;
+    @Autowired
+    private SSEServices sseServices;
 
     @PostMapping("/chat/send")
     public ResponseEntity<?> sendMessage(@RequestHeader("Authorization") String authorization,
@@ -50,6 +53,7 @@ public class MessageController {
             message.setSendAt(request.getSendAt());
             messageRespository.save(message);
 
+            sseServices.sendChatMessage(request);
             return ResponseEntity.ok().build();
         } else
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
