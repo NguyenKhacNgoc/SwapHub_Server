@@ -1,5 +1,7 @@
 package com.server.ecommerce.Entity;
 
+import java.util.Date;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,5 +26,15 @@ public class User {
     private String email;
     @Column
     private String password;
+    @Column
+    private String fullName;
+    @Column
+    private String phoneNumber;
+    @Column
+    private String address;
+    @Column
+    private String sex;
+    @Column
+    private Date dateofbirth;
 
 }

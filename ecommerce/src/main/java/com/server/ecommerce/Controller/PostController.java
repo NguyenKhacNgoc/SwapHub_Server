@@ -25,16 +25,18 @@ import com.server.ecommerce.DTO.ImageUploadResponse;
 import com.server.ecommerce.DTO.PostResponseDTO;
 import com.server.ecommerce.DTO.PostUpdateDTO;
 import com.server.ecommerce.DTO.ProfileDTO;
+import com.server.ecommerce.Entity.Category;
 import com.server.ecommerce.Entity.Images;
 import com.server.ecommerce.Entity.Posts;
-import com.server.ecommerce.Entity.Profile;
 import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.JWT.JwtTokenUtil;
+import com.server.ecommerce.Respository.CategoryRespository;
 import com.server.ecommerce.Respository.ImageRespository;
 import com.server.ecommerce.Respository.PostRespository;
-import com.server.ecommerce.Respository.ProfileRespository;
+
 import com.server.ecommerce.Respository.UserRespository;
 import com.server.ecommerce.Services.CloudinaryService;
+import com.server.ecommerce.Services.SSEServices;
 
 @RestController
 @RequestMapping("/api")
@@ -50,11 +52,24 @@ public class PostController {
     @Autowired
     private ImageRespository imageRespository;
     @Autowired
-    private ProfileRespository profileRespository;
+    private SSEServices sseServices;
+    @Autowired
+    private CategoryRespository categoryRespository;
+
+    @GetMapping("/getCategory")
+    public ResponseEntity<?> getCategory(@RequestHeader("Authorization") String authorization) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            List<Category> categories = categoryRespository.findAll();
+            return ResponseEntity.ok(categories);
+
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     @PostMapping("/createpost")
     public ResponseEntity<?> createPost(@RequestHeader("Authorization") String authorization,
-            @RequestParam("category") String category, @RequestParam("title") String title,
+            @RequestParam("category") Long category, @RequestParam("title") String title,
             @RequestParam("description") String description, @RequestParam("price") Float price,
             @RequestParam("images") List<MultipartFile> images) {
 
@@ -63,16 +78,16 @@ public class PostController {
             String email = jwtTokenUtil.getEmailFromToken(token);
             User user = userRespository.findByEmail(email).get();
             try {
-                // Lưu bài viết vào mysql trước đã
+                // Lưu bài viết vào mysql
                 Posts post = new Posts();
-                post.setCategory(category);
+                post.setCategory(categoryRespository.findById(category).get());
                 post.setDescription(description);
                 post.setPrice(price);
                 post.setTitle(title);
                 post.setUser(user);
                 postRespository.save(post);
 
-                // Đẩy hình ảnh lên cloudinary và return về url
+                // Đẩy hình ảnh lên cloudinary và trả về url
                 for (MultipartFile image : images) {
                     ImageUploadResponse imageUploadResponse = cloudinaryService.uploadImage(image.getBytes());
                     String publicID = imageUploadResponse.getPublicID();
@@ -83,6 +98,7 @@ public class PostController {
                     img.setPost(post);
                     imageRespository.save(img);
                 }
+                sseServices.updatePosts("create 200");
                 return ResponseEntity.ok("Thành công");
 
             } catch (Exception e) {
@@ -106,20 +122,19 @@ public class PostController {
         for (Posts post : posts) {
             PostResponseDTO postResponseDTO = new PostResponseDTO();
             postResponseDTO.setId(post.getId());
-            postResponseDTO.setCategory(post.getCategory());
+            postResponseDTO.setCategory(post.getCategory().getName());
             postResponseDTO.setDescription(post.getDescription());
             postResponseDTO.setPrice(post.getPrice());
             postResponseDTO.setTitle(post.getTitle());
 
-            Profile profile = profileRespository.findByUser(post.getUser()).get();
             ProfileDTO profileDTO = new ProfileDTO();
-            profileDTO.setId(profile.getId());
-            profileDTO.setAddress(profile.getAddress());
-            profileDTO.setDateofbirth(profile.getDateofbirth());
-            profileDTO.setFullName(profile.getFullName());
-            profileDTO.setEmail(profile.getUser().getEmail());
-            profileDTO.setPhoneNumber(profile.getPhoneNumber());
-            profileDTO.setSex(profile.getSex());
+            profileDTO.setId(post.getUser().getId());
+            profileDTO.setAddress(post.getUser().getAddress());
+            profileDTO.setDateofbirth(post.getUser().getDateofbirth());
+            profileDTO.setFullName(post.getUser().getFullName());
+            profileDTO.setEmail(post.getUser().getEmail());
+            profileDTO.setPhoneNumber(post.getUser().getPhoneNumber());
+            profileDTO.setSex(post.getUser().getSex());
             postResponseDTO.setProfile(profileDTO);
 
             // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
@@ -141,20 +156,19 @@ public class PostController {
             for (Posts post : posts) {
                 PostResponseDTO postResponseDTO = new PostResponseDTO();
                 postResponseDTO.setId(post.getId());
-                postResponseDTO.setCategory(post.getCategory());
+                postResponseDTO.setCategory(post.getCategory().getName());
                 postResponseDTO.setDescription(post.getDescription());
                 postResponseDTO.setPrice(post.getPrice());
                 postResponseDTO.setTitle(post.getTitle());
 
-                Profile profile = profileRespository.findByUser(user).get();
                 ProfileDTO profileDTO = new ProfileDTO();
-                profileDTO.setId(profile.getId());
-                profileDTO.setAddress(profile.getAddress());
-                profileDTO.setDateofbirth(profile.getDateofbirth());
-                profileDTO.setFullName(profile.getFullName());
-                profileDTO.setEmail(profile.getUser().getEmail());
-                profileDTO.setPhoneNumber(profile.getPhoneNumber());
-                profileDTO.setSex(profile.getSex());
+                profileDTO.setId(post.getUser().getId());
+                profileDTO.setAddress(post.getUser().getAddress());
+                profileDTO.setDateofbirth(post.getUser().getDateofbirth());
+                profileDTO.setFullName(post.getUser().getFullName());
+                profileDTO.setEmail(post.getUser().getEmail());
+                profileDTO.setPhoneNumber(post.getUser().getPhoneNumber());
+                profileDTO.setSex(post.getUser().getSex());
                 postResponseDTO.setProfile(profileDTO);
 
                 // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
@@ -221,6 +235,7 @@ public class PostController {
                     }
                     // Xoá bài viết khỏi cơ sở dữ liệu
                     postRespository.deleteById(requestdelete.getId());
+                    sseServices.updatePosts("deleted 200");
                     return ResponseEntity.ok("Bài viết đã được xoá");
 
                 } else {

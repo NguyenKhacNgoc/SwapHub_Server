@@ -9,16 +9,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileMessageResponseDTO {
+public class DetailMessageResponseDTO {
     private Long id;
     private String fullName;
     private String email;
     private String phoneNumber;
-
     private String address;
-
     private String sex;
-
     private Date dateofbirth;
     private MessageDTO messageDTO;
     private String status;

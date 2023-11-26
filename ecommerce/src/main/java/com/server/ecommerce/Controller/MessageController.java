@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.server.ecommerce.DTO.MessageDTO;
 import com.server.ecommerce.DTO.MessageResponseDTO;
 
-import com.server.ecommerce.DTO.ProfileMessageResponseDTO;
+import com.server.ecommerce.DTO.DetailMessageResponseDTO;
 import com.server.ecommerce.Entity.Message;
-import com.server.ecommerce.Entity.Profile;
+import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.JWT.JwtTokenUtil;
 import com.server.ecommerce.Respository.MessageRespository;
-import com.server.ecommerce.Respository.ProfileRespository;
+
 import com.server.ecommerce.Respository.UserRespository;
 import com.server.ecommerce.Services.SSEServices;
 
@@ -35,8 +36,6 @@ public class MessageController {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private UserRespository userRespository;
-    @Autowired
-    private ProfileRespository profileRespository;
     @Autowired
     private SSEServices sseServices;
 
@@ -86,40 +85,74 @@ public class MessageController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
+    @PutMapping("/setMessageisSeen")
+    public ResponseEntity<?> setMessageisSeen(@RequestHeader("Authorization") String authorization,
+            @RequestBody MessageDTO request) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            User user = userRespository.findByEmail(jwtTokenUtil.getEmailFromToken(token)).get();
+            List<Message> messages = messageRespository.findBySenderIDAndReceiverID(request.getSenderID(),
+                    user.getId());
+            for (Message message : messages) {
+                message.setSeen(true);
+                messageRespository.save(message);
+            }
+            return ResponseEntity.status(HttpStatus.OK).build();
+
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @GetMapping("/testmis")
+    public ResponseEntity<?> setMis(@RequestHeader("Authorization") String authorization,
+            @RequestBody MessageDTO request) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            User user = userRespository.findByEmail(jwtTokenUtil.getEmailFromToken(token)).get();
+            List<Message> messages = messageRespository.findBySenderIDAndReceiverID(request.getSenderID(),
+                    user.getId());
+
+            return ResponseEntity.ok(messages);
+
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
     @GetMapping("/getMessageByUserID")
     public ResponseEntity<?> getMessageByUserID(@RequestHeader("Authorization") String authorization) {
         String token = authorization.substring(7);
         if (jwtTokenUtil.validateToken(token)) {
             Long userID = userRespository.findByEmail(jwtTokenUtil.getEmailFromToken(token)).get().getId();
             List<Long> list = messageRespository.getMessageByUserID(userID);
-            List<ProfileMessageResponseDTO> profileMessageResponseDTOs = new ArrayList<>();
+            List<DetailMessageResponseDTO> detailMessageResponseDTOs = new ArrayList<>();
             for (Long id : list) {
-                Profile profile = profileRespository.findById(id).get();
-                ProfileMessageResponseDTO profileMessageResponseDTO = new ProfileMessageResponseDTO();
-                profileMessageResponseDTO.setId(profile.getId());
-                profileMessageResponseDTO.setPhoneNumber(profile.getPhoneNumber());
-                profileMessageResponseDTO.setAddress(profile.getAddress());
-                profileMessageResponseDTO.setDateofbirth(profile.getDateofbirth());
-                profileMessageResponseDTO.setEmail(profile.getUser().getEmail());
-                profileMessageResponseDTO.setFullName(profile.getFullName());
-                profileMessageResponseDTO.setSex(profile.getSex());
+                User user = userRespository.findById(id).get();
+                DetailMessageResponseDTO detailMessageResponseDTO = new DetailMessageResponseDTO();
+                detailMessageResponseDTO.setId(user.getId());
+                detailMessageResponseDTO.setPhoneNumber(user.getPhoneNumber());
+                detailMessageResponseDTO.setAddress(user.getAddress());
+                detailMessageResponseDTO.setDateofbirth(user.getDateofbirth());
+                detailMessageResponseDTO.setEmail(user.getEmail());
+                detailMessageResponseDTO.setFullName(user.getFullName());
+                detailMessageResponseDTO.setSex(user.getSex());
 
-                Message message = messageRespository.findLastMessageBetweenUser(profile.getId(), userID).get(0);
+                Message message = messageRespository.findLastMessageBetweenUser(user.getId(), userID).get(0);
                 MessageDTO messageDTO = new MessageDTO();
                 messageDTO.setContent(message.getContent());
                 messageDTO.setId(message.getId());
                 messageDTO.setReceiverID(message.getReceiverID());
                 messageDTO.setSendAt(message.getSendAt());
                 messageDTO.setSenderID(message.getSenderID());
-                profileMessageResponseDTO.setMessageDTO(messageDTO);
+                messageDTO.setSeen(message.isSeen());
+                detailMessageResponseDTO.setMessageDTO(messageDTO);
                 if (userID == message.getSenderID())
-                    profileMessageResponseDTO.setStatus("send");
+                    detailMessageResponseDTO.setStatus("send");
                 else
-                    profileMessageResponseDTO.setStatus("receiver");
-                profileMessageResponseDTOs.add(profileMessageResponseDTO);
+                    detailMessageResponseDTO.setStatus("receiver");
+                detailMessageResponseDTOs.add(detailMessageResponseDTO);
 
             }
-            return ResponseEntity.ok(profileMessageResponseDTOs);
+            return ResponseEntity.ok(detailMessageResponseDTOs);
         } else
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }

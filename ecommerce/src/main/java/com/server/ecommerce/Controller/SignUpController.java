@@ -16,9 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.server.ecommerce.DTO.UserDTO;
 import com.server.ecommerce.Entity.TempUser;
 import com.server.ecommerce.Entity.User;
-import com.server.ecommerce.Entity.Profile;
 import com.server.ecommerce.Respository.TempUserRespository;
-import com.server.ecommerce.Respository.ProfileRespository;
+
 import com.server.ecommerce.Respository.UserRespository;
 import com.server.ecommerce.Services.EmailServices;
 
@@ -31,15 +30,13 @@ public class SignUpController {
     private TempUserRespository tempUserRespository;
     @Autowired
     private EmailServices emailServices;
-    @Autowired
-    private ProfileRespository profileRespository;
 
     public SignUpController(UserRespository userRespository, TempUserRespository tempUserRespository,
-            EmailServices emailServices, ProfileRespository profileRespository) {
+            EmailServices emailServices) {
         this.userRespository = userRespository;
         this.tempUserRespository = tempUserRespository;
         this.emailServices = emailServices;
-        this.profileRespository = profileRespository;
+
     }
 
     @PostMapping("/send-verification-code")
@@ -98,15 +95,15 @@ public class SignUpController {
                     User user = new User();
                     user.setEmail(request.getEmail());
                     user.setPassword(request.getPassword());
+                    user.setAddress(request.getAddress());
+                    user.setDateofbirth(request.getDateofbirth());
+                    user.setFullName(request.getFullName());
+                    user.setPhoneNumber(request.getPhoneNumber());
+                    user.setSex(request.getSex());
                     userRespository.save(user);
 
                     // Đăng ký xong xoá tempU
                     tempUserRespository.delete(existingTempU.get());
-                    // Tạo bảng thông tin người dùng
-                    Profile profile = new Profile();
-                    profile.setId(user.getId());
-                    profile.setUser(user);
-                    profileRespository.save(profile);
 
                     return ResponseEntity.ok("Đăng ký thành công");
 

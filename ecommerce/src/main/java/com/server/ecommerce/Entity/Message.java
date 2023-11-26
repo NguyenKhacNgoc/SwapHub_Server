@@ -29,4 +29,6 @@ public class Message {
     private Long receiverID;
     @Column
     private LocalDateTime sendAt;
+    @Column
+    private boolean seen = false;
 }

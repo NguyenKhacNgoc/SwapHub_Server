@@ -19,4 +19,9 @@ public class SSEController {
         return sseServices.createSSEEmitterForChat();
     }
 
+    @GetMapping("/post")
+    public SseEmitter createPost() {
+        return sseServices.createSSEEmitterForPost();
+    }
+
 }

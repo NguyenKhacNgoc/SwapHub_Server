@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.DTO.ProfileDTO;
-import com.server.ecommerce.Entity.Profile;
+
 import com.server.ecommerce.JWT.JwtTokenUtil;
-import com.server.ecommerce.Respository.ProfileRespository;
+
 import com.server.ecommerce.Respository.UserRespository;
 
 @RestController
@@ -27,22 +27,28 @@ public class ProfileController {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private UserRespository userRespository;
-    @Autowired
-    private ProfileRespository profileRespository;
+
+    @GetMapping("/checkauth")
+    public ResponseEntity<?> checkauth(@RequestHeader("Authorization") String authorization) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token))
+            return ResponseEntity.status(HttpStatus.OK).build();
+        else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     @GetMapping("/getprofile")
     public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authorization) {
         String token = authorization.substring(7);
         if (jwtTokenUtil.validateToken(token)) {
             String email = jwtTokenUtil.getEmailFromToken(token);
-            User user = userRespository.findByEmail(email).get();
-            Optional<Profile> existingUser = profileRespository.findByUser(user);
+            Optional<User> existingUser = userRespository.findByEmail(email);
             if (existingUser.isPresent()) {
                 ProfileDTO profileDTO = new ProfileDTO();
                 profileDTO.setAddress(existingUser.get().getAddress());
                 profileDTO.setDateofbirth(existingUser.get().getDateofbirth());
                 profileDTO.setFullName(existingUser.get().getFullName());
-                profileDTO.setEmail(existingUser.get().getUser().getEmail());
+                profileDTO.setEmail(existingUser.get().getEmail());
                 profileDTO.setPhoneNumber(existingUser.get().getPhoneNumber());
                 profileDTO.setSex(existingUser.get().getSex());
                 return ResponseEntity.ok(profileDTO);
@@ -54,46 +60,34 @@ public class ProfileController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
-    @GetMapping("/checkUpdateProfile")
-    public ResponseEntity<?> checkUpdateProfile(@RequestHeader("Authorization") String authorization){
-        String token = authorization.substring(7);
-        if(jwtTokenUtil.validateToken(token)){
-            String email = jwtTokenUtil.getEmailFromToken(token);
-            User user = userRespository.findByEmail(email).get();
-            Profile profile = profileRespository.findByUser(user).get();
-            if(profile.getAddress() != null && profile.getDateofbirth() !=null && profile.getFullName() !=null && profile.getPhoneNumber() != null && profile.getSex() !=null){
-                return ResponseEntity.ok("OK");
-            }
-            else return ResponseEntity.ok("Not OK");
-        }
-        else return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
 
-    @GetMapping("/testgetprofile")
-    public ResponseEntity<?> testgetProfile(@RequestParam("email") String email) {
-        Optional<User> exsitingU = userRespository.findByEmail(email);
+    // @GetMapping("/testgetprofile")
+    // public ResponseEntity<?> testgetProfile(@RequestParam("email") String email)
+    // {
+    // Optional<User> exsitingU = userRespository.findByEmail(email);
 
-        if (exsitingU.isPresent()) {
+    // if (exsitingU.isPresent()) {
 
-            User user = exsitingU.get();
-            Optional<Profile> existingUser = profileRespository.findByUser(user);
-            if (existingUser.isPresent()) {
-                ProfileDTO profileDTO = new ProfileDTO();
-                profileDTO.setAddress(existingUser.get().getAddress());
-                profileDTO.setDateofbirth(existingUser.get().getDateofbirth());
-                profileDTO.setFullName(existingUser.get().getFullName());
-                profileDTO.setEmail(existingUser.get().getUser().getEmail());
-                profileDTO.setPhoneNumber(existingUser.get().getPhoneNumber());
-                profileDTO.setSex(existingUser.get().getSex());
-                return ResponseEntity.ok(profileDTO);
-            } else {
-                return ResponseEntity.badRequest().body("Không tìm thấy thông tin người dùng");
-            }
+    // User user = exsitingU.get();
+    // Optional<Profile> existingUser = profileRespository.findByUser(user);
+    // if (existingUser.isPresent()) {
+    // ProfileDTO profileDTO = new ProfileDTO();
+    // profileDTO.setAddress(existingUser.get().getAddress());
+    // profileDTO.setDateofbirth(existingUser.get().getDateofbirth());
+    // profileDTO.setFullName(existingUser.get().getFullName());
+    // profileDTO.setEmail(existingUser.get().getUser().getEmail());
+    // profileDTO.setPhoneNumber(existingUser.get().getPhoneNumber());
+    // profileDTO.setSex(existingUser.get().getSex());
+    // return ResponseEntity.ok(profileDTO);
+    // } else {
+    // return ResponseEntity.badRequest().body("Không tìm thấy thông tin người
+    // dùng");
+    // }
 
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
+    // } else {
+    // return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // }
+    // }
 
     @PutMapping("/putprofile")
     public ResponseEntity<?> putProfile(@RequestHeader("Authorization") String authorization,
@@ -102,20 +96,15 @@ public class ProfileController {
         if (jwtTokenUtil.validateToken(token)) {
             String email = jwtTokenUtil.getEmailFromToken(token);
             User user = userRespository.findByEmail(email).get();
-            Optional<Profile> existingUser = profileRespository.findByUser(user);
-            if (existingUser.isPresent()) {
-                Profile profile = existingUser.get();
-                profile.setFullName(request.getFullName());
-                profile.setPhoneNumber(request.getPhoneNumber());
-                profile.setAddress(request.getAddress());
-                profile.setSex(request.getSex());
-                profile.setDateofbirth(request.getDateofbirth());
-                profileRespository.save(profile);
 
-                return ResponseEntity.ok("Thành công");
-            } else {
-                return ResponseEntity.badRequest().body("Người dùng không tồn tại, vui lòng thử lại sau");
-            }
+            user.setFullName(request.getFullName());
+            user.setPhoneNumber(request.getPhoneNumber());
+            user.setAddress(request.getAddress());
+            user.setSex(request.getSex());
+            user.setDateofbirth(request.getDateofbirth());
+            userRespository.save(user);
+
+            return ResponseEntity.ok("Thành công");
 
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

@@ -16,4 +16,6 @@ public interface MessageRespository extends JpaRepository<Message, Long> {
     @Query("SELECT m FROM Message m WHERE (m.senderID = :user1 AND m.receiverID = :user2) OR (m.senderID = :user2 AND m.receiverID = :user1) ORDER BY m.sendAt DESC")
     List<Message> findLastMessageBetweenUser(Long user1, Long user2);
 
+    List<Message> findBySenderIDAndReceiverID(Long senderID, Long receiverID);
+
 }
