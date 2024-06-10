@@ -33,6 +33,20 @@ public class AuthServices {
         }
     }
 
+    public boolean authenticateAdmin(String email, String password) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            if (user.get().getPassword().equals(password) && user.get().getRole().equals("admin")
+                    && user.get().getStatus().equals("Bình thường")) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
     public String generateToken(String email) {
         return jwtTokenUtil.generateToken(email);
     }

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết tố cáo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #333;
+            background-color: #f7f7f7;
+            border: 1px solid #333;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            margin: 0;
+            padding: 10px;
+            color: #007bff;
+        }
+
+        .detail {
+            margin-bottom: 20px;
+        }
+
+        .detail h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .detail span {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .image-container img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Welcome to SWAP HUB</h1>
+    </header>
+    <nav>
+        <a href="/admin/getpendingpost">Duyệt bài viết</a>
+        <a href="/admin/getPendingReport">Danh sách tố cáo</a>
+        <a href="/admin/thongke">Thống kê</a>
+    </nav>
+    <br class="container">
+        <div class="header">
+            <h2>Chi tiết tố cáo</h2>
+        </div>
+        <div style="margin-left: 20px;">
+            <h3>Người tố cáo: <span th:text="${report.reportResponse.accuser}"></span></h3>
+            <h3>Người bị tố cáo: <span th:text="${report.reportResponse.accused}"></span></h3>
+            <h3>Lý do: <span th:text="${report.reportResponse.reason}"></span></h3>
+            <h3>Thời gian: <span th:text="${#temporals.format(report.reportResponse.sendAt, 'HH:mm:ss - dd/MM/yyyy')}"></span></h3>
+            <!-- danh sách hình ảnh -->
+            <div class="image-container">
+                <div th:each="imgR : ${report.images}">
+                    <img th:src="${imgR.secureUrl}" alt="Image">
+                </div>
+            </div>
+        </div>
+        <a th:href="@{/admin/getProfileUser(email=${report.reportResponse.accused})}" target="_blank" style="text-decoration: none;margin-left: 20px;">
+            Nhấn vào đây để xem thông tin người dùng <span th:text="${report.reportResponse.accused}"></span>
+        </a>
+        <br></br>
+        <a th:href="@{/admin/getListPostByUser(email=${report.reportResponse.accused})}" target="_blank" style="text-decoration: none;margin-left: 20px;">
+            Nhấn vào đây để xem danh sách bài viết của <span th:text="${report.reportResponse.accused}"></span>
+        </a>  
+        <div style="display: flex;justify-content: flex-start;margin-top: 20px;">
+            <button type="button" th:data-rp-id="${report.reportResponse.id}" th:data-u-id="${report.reportResponse.accused}" onclick="xacnhankhongvipham()">Không vi phạm</button>
+            <button type="button" th:data-rp-id="${report.reportResponse.id}" th:data-u-id="${report.reportResponse.accused}" onclick="canhcao()">Cảnh cáo</button>
+            <button type="button" th:data-rp-id="${report.reportResponse.id}" th:data-u-id="${report.reportResponse.accused}" onclick="khoataikhoan()">Khoá tài khoản</button>
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        checkAuth()
+    })
+    function checkAuth() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/api/auth/login")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 401) {
+                    localStorage.removeItem('token')
+                    window.location.href = '/admin/login'
+
+                }
+
+            }
+        }
+        xhr.send()
+
+    }
+    function xacnhankhongvipham() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        const btn = event.target
+        const userId = btn.getAttribute('data-u-id')
+        const reportId = btn.getAttribute('data-rp-id')
+        xhr.open("PUT", "/admin/api/setVerificated")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    alert('Đã xác nhận không vi phạm')
+                }
+            }
+        }
+        const data = {
+            id: reportId,
+            accused: userId
+        }
+        xhr.send(JSON.stringify(data))
+
+
+    }
+
+    //Chua test nha
+    function deletePost() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        const btn = event.target
+        const postId = btn.getAttribute('data-id')
+        xhr.open("DELETE", "/api/deletePost")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const element = document.getElementById('post' + postId)
+                    element.parentNode.removeChild(element)
+                }
+            }
+        }
+        xhr.send(JSON.stringify({ id: postId }))
+        console.log("Id: " + postId)
+
+    }
+    function canhcao() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        const btn = event.target
+        const userId = btn.getAttribute('data-u-id')
+        const reportId = btn.getAttribute('data-rp-id')
+        xhr.open("PUT", "/admin/api/setwarninguser")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    alert('Đã cảnh báo')
+                }
+            }
+        }
+        const data = {
+            id: reportId,
+            accused: userId
+        }
+        xhr.send(JSON.stringify(data))
+
+
+    }
+    function khoataikhoan() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        const btn = event.target
+        const userId = btn.getAttribute('data-u-id')
+        const reportId = btn.getAttribute('data-rp-id')
+        xhr.open("PUT", "/admin/api/blockuser")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    alert('Đã cảnh báo')
+                }
+            }
+        }
+        const data = {
+            id: reportId,
+            accused: userId
+        }
+        xhr.send(JSON.stringify(data))
+
+
+    }
+
+
+</script>
+
+</html>

@@ -1,7 +1,6 @@
 package com.server.ecommerce.DTO;
 
-import java.time.LocalDateTime;
-
+import com.google.cloud.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +13,7 @@ public class MessageDTO {
     private Long senderID;
     private Long receiverID;
     private String content;
-    private LocalDateTime sendAt;
+    private Timestamp sendAt;
     private boolean seen;
 
 }

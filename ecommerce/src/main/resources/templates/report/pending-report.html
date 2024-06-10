@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách tố cáo chờ duyệt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #333;
+            background-color: #f7f7f7;
+            border: 1px solid #333;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        td a {
+            text-decoration: none;
+            color: #333333;
+            font-weight: bold;
+        }
+
+        td a:hover {
+            color: #0066cc;
+        }
+
+        @media screen and (max-width: 600px) {
+            table {
+                border: 0;
+            }
+
+            table thead tr {
+                display: none;
+            }
+
+            table tbody tr {
+                display: block;
+                border: 1px solid #dddddd;
+                margin-bottom: 20px;
+            }
+
+            table tbody td {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Welcome to SWAP HUB</h1>
+    </header>
+    <nav>
+        <a href="/admin/getpendingpost">Duyệt bài viết</a>
+        <a href="/admin/getPendingReport">Danh sách tố cáo</a>
+        <a href="/admin/thongke">Thống kê</a>
+    </nav>
+    <div class="container">
+        <div class="header">
+            <h2>Danh sách tố cáo chờ được duyệt</h2>
+            <h2 id="userFN"></h2>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Lý do</th>
+                    <th>Người tố cáo</th>
+                    <th>Bị cáo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="report : ${reports}">
+                    <td th:text="${report.id}"></td>
+                    <td><a th:href="@{'/admin/reportdetail/' + ${report.id}}" target="_blank"><span
+                                th:text="${report.reason}"></span></a></td>
+                    <td th:text="${report.accuser}"></td>
+                    <td th:text="${report.accused}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        checkAuth()
+
+    })
+    function checkAuth() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/api/auth/login")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 401) {
+                    localStorage.removeItem('token')
+                    window.location.href = '/admin/login'
+
+                }
+                else {
+                    getProfile()
+                }
+            }
+        }
+        xhr.send()
+
+    }
+    function getProfile() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/api/getprofile")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const fullName = JSON.parse(xhr.response).fullName
+                    document.getElementById('userFN').textContent = 'Xin chào, ' + fullName
+
+                }
+            }
+        }
+        xhr.send()
+
+    }
+
+</script>
+
+</html>

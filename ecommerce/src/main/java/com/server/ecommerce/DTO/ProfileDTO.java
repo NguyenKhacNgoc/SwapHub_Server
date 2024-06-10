@@ -15,10 +15,15 @@ public class ProfileDTO {
     private String email;
     private String phoneNumber;
 
-    private String address;
+    private String province;
+
+    private String district;
+
+    private String ward;
 
     private String sex;
 
     private Date dateofbirth;
+    private String status;
 
 }

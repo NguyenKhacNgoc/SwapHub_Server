@@ -10,15 +10,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RestController;
 
+import com.server.ecommerce.Entity.Address;
 import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.DTO.ProfileDTO;
 
 import com.server.ecommerce.JWT.JwtTokenUtil;
 
 import com.server.ecommerce.Respository.UserRespository;
+import com.server.ecommerce.Services.ResponseServices;
 
 @RestController
 @RequestMapping("/api")
@@ -27,6 +28,8 @@ public class ProfileController {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private UserRespository userRespository;
+    @Autowired
+    private ResponseServices responseServices;
 
     @GetMapping("/checkauth")
     public ResponseEntity<?> checkauth(@RequestHeader("Authorization") String authorization) {
@@ -44,14 +47,7 @@ public class ProfileController {
             String email = jwtTokenUtil.getEmailFromToken(token);
             Optional<User> existingUser = userRespository.findByEmail(email);
             if (existingUser.isPresent()) {
-                ProfileDTO profileDTO = new ProfileDTO();
-                profileDTO.setAddress(existingUser.get().getAddress());
-                profileDTO.setDateofbirth(existingUser.get().getDateofbirth());
-                profileDTO.setFullName(existingUser.get().getFullName());
-                profileDTO.setEmail(existingUser.get().getEmail());
-                profileDTO.setPhoneNumber(existingUser.get().getPhoneNumber());
-                profileDTO.setSex(existingUser.get().getSex());
-                return ResponseEntity.ok(profileDTO);
+                return ResponseEntity.ok(responseServices.responseProfileDTO(existingUser.get()));
             } else {
                 return ResponseEntity.badRequest().body("Không tìm thấy thông tin người dùng");
             }
@@ -99,7 +95,11 @@ public class ProfileController {
 
             user.setFullName(request.getFullName());
             user.setPhoneNumber(request.getPhoneNumber());
-            user.setAddress(request.getAddress());
+            Address address = user.getAddress();
+            address.setProvince(request.getProvince());
+            address.setDistrict(request.getDistrict());
+            address.setWard(request.getWard());
+            user.setAddress(address);
             user.setSex(request.getSex());
             user.setDateofbirth(request.getDateofbirth());
             userRespository.save(user);

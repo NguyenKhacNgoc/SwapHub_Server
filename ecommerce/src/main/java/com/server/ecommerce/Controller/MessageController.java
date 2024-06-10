@@ -130,7 +130,9 @@ public class MessageController {
                 DetailMessageResponseDTO detailMessageResponseDTO = new DetailMessageResponseDTO();
                 detailMessageResponseDTO.setId(user.getId());
                 detailMessageResponseDTO.setPhoneNumber(user.getPhoneNumber());
-                detailMessageResponseDTO.setAddress(user.getAddress());
+                detailMessageResponseDTO.setProvince(user.getAddress().getProvince());
+                detailMessageResponseDTO.setDistrict(user.getAddress().getDistrict());
+                detailMessageResponseDTO.setWard(user.getAddress().getWard());
                 detailMessageResponseDTO.setDateofbirth(user.getDateofbirth());
                 detailMessageResponseDTO.setEmail(user.getEmail());
                 detailMessageResponseDTO.setFullName(user.getFullName());

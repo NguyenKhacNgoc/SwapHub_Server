@@ -1,9 +1,11 @@
 package com.server.ecommerce.Controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,14 +21,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.server.ecommerce.DTO.ImageUploadResponse;
-
 import com.server.ecommerce.DTO.PostResponseDTO;
 import com.server.ecommerce.DTO.PostUpdateDTO;
 import com.server.ecommerce.DTO.ProfileDTO;
 import com.server.ecommerce.Entity.Category;
-import com.server.ecommerce.Entity.Images;
+import com.server.ecommerce.Entity.ImgPost;
 import com.server.ecommerce.Entity.Posts;
 import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.JWT.JwtTokenUtil;
@@ -36,6 +36,7 @@ import com.server.ecommerce.Respository.PostRespository;
 
 import com.server.ecommerce.Respository.UserRespository;
 import com.server.ecommerce.Services.CloudinaryService;
+import com.server.ecommerce.Services.ResponseServices;
 import com.server.ecommerce.Services.SSEServices;
 
 @RestController
@@ -45,6 +46,8 @@ public class PostController {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private CloudinaryService cloudinaryService;
+    @Autowired
+    private ResponseServices responseServices;
     @Autowired
     private UserRespository userRespository;
     @Autowired
@@ -67,6 +70,21 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
+    @GetMapping("/getNameCategory")
+    public ResponseEntity<?> getNameCategory() {
+
+        List<Category> categories = categoryRespository.findAll();
+        List<String> categoriesName = new ArrayList<>();
+        categoriesName.add("Tất cả");
+        for (Category category : categories) {
+            String Strcategory = category.getName();
+            categoriesName.add(Strcategory);
+        }
+
+        return ResponseEntity.ok(categoriesName);
+
+    }
+
     @PostMapping("/createpost")
     public ResponseEntity<?> createPost(@RequestHeader("Authorization") String authorization,
             @RequestParam("category") Long category, @RequestParam("title") String title,
@@ -84,7 +102,9 @@ public class PostController {
                 post.setDescription(description);
                 post.setPrice(price);
                 post.setTitle(title);
+                post.setPostAt(LocalDateTime.now());
                 post.setUser(user);
+                post.setStatus("pending");
                 postRespository.save(post);
 
                 // Đẩy hình ảnh lên cloudinary và trả về url
@@ -92,7 +112,7 @@ public class PostController {
                     ImageUploadResponse imageUploadResponse = cloudinaryService.uploadImage(image.getBytes());
                     String publicID = imageUploadResponse.getPublicID();
                     String imgUrl = imageUploadResponse.getSecureUrl();
-                    Images img = new Images();
+                    ImgPost img = new ImgPost();
                     img.setPublicID(publicID);
                     img.setImgUrl(imgUrl);
                     img.setPost(post);
@@ -117,30 +137,10 @@ public class PostController {
 
     @GetMapping("/getallPost")
     public ResponseEntity<?> getallPost() {
-        List<Posts> posts = postRespository.findAll();
+        List<Posts> posts = postRespository.findByStatusOk();
         List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
         for (Posts post : posts) {
-            PostResponseDTO postResponseDTO = new PostResponseDTO();
-            postResponseDTO.setId(post.getId());
-            postResponseDTO.setCategory(post.getCategory().getName());
-            postResponseDTO.setDescription(post.getDescription());
-            postResponseDTO.setPrice(post.getPrice());
-            postResponseDTO.setTitle(post.getTitle());
-
-            ProfileDTO profileDTO = new ProfileDTO();
-            profileDTO.setId(post.getUser().getId());
-            profileDTO.setAddress(post.getUser().getAddress());
-            profileDTO.setDateofbirth(post.getUser().getDateofbirth());
-            profileDTO.setFullName(post.getUser().getFullName());
-            profileDTO.setEmail(post.getUser().getEmail());
-            profileDTO.setPhoneNumber(post.getUser().getPhoneNumber());
-            profileDTO.setSex(post.getUser().getSex());
-            postResponseDTO.setProfile(profileDTO);
-
-            // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
-            postResponseDTO.setImages(
-                    cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
-            postResponseDTOs.add(postResponseDTO);
+            postResponseDTOs.add(responseServices.postResponse(post));
         }
         return ResponseEntity.ok(postResponseDTOs);
 
@@ -154,27 +154,7 @@ public class PostController {
             List<Posts> posts = postRespository.findByUser(user);
             List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
             for (Posts post : posts) {
-                PostResponseDTO postResponseDTO = new PostResponseDTO();
-                postResponseDTO.setId(post.getId());
-                postResponseDTO.setCategory(post.getCategory().getName());
-                postResponseDTO.setDescription(post.getDescription());
-                postResponseDTO.setPrice(post.getPrice());
-                postResponseDTO.setTitle(post.getTitle());
-
-                ProfileDTO profileDTO = new ProfileDTO();
-                profileDTO.setId(post.getUser().getId());
-                profileDTO.setAddress(post.getUser().getAddress());
-                profileDTO.setDateofbirth(post.getUser().getDateofbirth());
-                profileDTO.setFullName(post.getUser().getFullName());
-                profileDTO.setEmail(post.getUser().getEmail());
-                profileDTO.setPhoneNumber(post.getUser().getPhoneNumber());
-                profileDTO.setSex(post.getUser().getSex());
-                postResponseDTO.setProfile(profileDTO);
-
-                // Cái cloudinaryService này viết nhờ phương thức thôi, tại lười
-                postResponseDTO.setImages(
-                        cloudinaryService.copyImagesToImageUploadResponses(imageRespository.findByPost(post)));
-                postResponseDTOs.add(postResponseDTO);
+                postResponseDTOs.add(responseServices.postResponse(post));
             }
             return ResponseEntity.ok(postResponseDTOs);
         } else {
@@ -215,6 +195,29 @@ public class PostController {
 
     }
 
+    @PutMapping("/hidePost")
+    public ResponseEntity<?> hidePost(@RequestHeader("Authorization") String authorization,
+            @RequestBody PostUpdateDTO request) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            String email = jwtTokenUtil.getEmailFromToken(token);
+            User user = userRespository.findByEmail(email).get();
+            Optional<Posts> expost = postRespository.findById(request.getId());
+            if (expost.isPresent()) {
+                if (user.getId() == expost.get().getUser().getId()) {
+                    Posts post = expost.get();
+                    post.setStatus("hide");
+                    postRespository.save(post);
+                    return ResponseEntity.ok().body("Ẩn bài viết thành công");
+                } else
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Không thể ẩn bài viết của người khác");
+            } else
+                return ResponseEntity.status(404).body("Bài viết không tòn tại");
+        } else
+            return ResponseEntity.status(401).body("Xác thực thất bại");
+
+    }
+
     @DeleteMapping("/deletePost")
     public ResponseEntity<?> deletePost(@RequestHeader("Authorization") String authorization,
             @RequestBody PostUpdateDTO requestdelete) throws IOException {
@@ -222,11 +225,13 @@ public class PostController {
         if (jwtTokenUtil.validateToken(token)) {
             String email = jwtTokenUtil.getEmailFromToken(token);
             User user = userRespository.findByEmail(email).get();
+
             Optional<Posts> existingpost = postRespository.findById(requestdelete.getId());
             if (existingpost.isPresent()) {
-                if (user.getId() == existingpost.get().getUser().getId()) {
-                    List<Images> images = imageRespository.findByPost(existingpost.get());
-                    for (Images img : images) {
+                // Nếu user đăng nhập là admin thì cho xoá tất
+                if (user.getRole().equals("admin")) {
+                    List<ImgPost> images = imageRespository.findByPost(existingpost.get());
+                    for (ImgPost img : images) {
                         String publicID = img.getPublicID();
                         // Gọi cloudinary để xoá ảnh khỏi kho lưu trữ
                         cloudinaryService.deleteImage(publicID);
@@ -239,7 +244,24 @@ public class PostController {
                     return ResponseEntity.ok("Bài viết đã được xoá");
 
                 } else {
-                    return ResponseEntity.badRequest().body("Không thể xoá bài viết của người khác");
+                    if (user.getId() == existingpost.get().getUser().getId()) {
+                        List<ImgPost> images = imageRespository.findByPost(existingpost.get());
+                        for (ImgPost img : images) {
+                            String publicID = img.getPublicID();
+                            // Gọi cloudinary để xoá ảnh khỏi kho lưu trữ
+                            cloudinaryService.deleteImage(publicID);
+                            // Xoá bảng hình ảnh khỏi cơ sở dữ liệu
+                            imageRespository.delete(img);
+                        }
+                        // Xoá bài viết khỏi cơ sở dữ liệu
+                        postRespository.deleteById(requestdelete.getId());
+                        sseServices.updatePosts("deleted 200");
+                        return ResponseEntity.ok("Bài viết đã được xoá");
+
+                    } else {
+                        return ResponseEntity.badRequest().body("Không thể xoá bài viết của người khác");
+                    }
+
                 }
 
             } else {
@@ -268,6 +290,139 @@ public class PostController {
                 return ResponseEntity.badRequest().build();
         } else
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+    }
+
+    @GetMapping("/checklikedPost")
+    public ResponseEntity<?> checklikedPost(@RequestHeader("Authorization") String authorization,
+            @RequestParam("postID") Long postID) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            User user = userRespository.findByEmail(jwtTokenUtil.getEmailFromToken(token)).get();
+            Optional<Posts> existingPost = postRespository.findById(postID);
+            if (existingPost.isPresent()) {
+                Posts post = existingPost.get();
+                List<User> likedBy = post.getLikedBy();
+                if (likedBy.contains(user)) {
+                    return ResponseEntity.ok("liked");
+
+                } else {
+                    return ResponseEntity.ok("like");
+                }
+
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+    }
+
+    // Phần này để thích bài viết
+
+    @PostMapping("/post/like")
+    public ResponseEntity<?> likepost(@RequestHeader("Authorization") String authorization,
+            @RequestBody PostUpdateDTO request) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            User user = userRespository.findByEmail(jwtTokenUtil.getEmailFromToken(token)).get();
+            Optional<Posts> existingPost = postRespository.findById(request.getId());
+            if (existingPost.isPresent()) {
+                Posts post = existingPost.get();
+                List<User> likedBy = post.getLikedBy();
+                // Kiểm tra xem người dùng đã thích bài viết này hay chưa
+                if (!likedBy.contains(user))
+                    likedBy.add(user);
+                // Nếu đã like thì unlike
+                else
+                    likedBy.remove(user);
+                post.setLikedBy(likedBy);
+                postRespository.save(post);
+                return ResponseEntity.ok().build();
+
+            } else
+                return ResponseEntity.badRequest().body("Bài viết này không tồn tại");
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @GetMapping("/getPostisLiked")
+    public ResponseEntity<?> getPostisLiked(@RequestHeader("Authorization") String authorization) {
+        String token = authorization.substring(7);
+        if (jwtTokenUtil.validateToken(token)) {
+            Long userID = userRespository.findByEmail(jwtTokenUtil.getEmailFromToken(token)).get().getId();
+
+            List<Posts> allpost = postRespository.findAll();
+            List<Posts> likedPosts = allpost.stream()
+                    .filter(post -> post.getLikedBy().stream().anyMatch(user -> user.getId().equals(userID)))
+                    .collect(Collectors.toList());
+
+            List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
+            for (Posts post : likedPosts) {
+                postResponseDTOs.add(responseServices.postResponse(post));
+            }
+            return ResponseEntity.ok(postResponseDTOs);
+
+        } else
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @GetMapping("/search/result")
+    public ResponseEntity<?> searchText(@RequestParam("searchText") String searchText) {
+        List<Posts> searchResult = postRespository.findByTitle(searchText);
+        List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
+        for (Posts post : searchResult) {
+            postResponseDTOs.add(responseServices.postResponse(post));
+        }
+        return ResponseEntity.ok(postResponseDTOs);
+    }
+
+    // Lọc theo thể loại
+
+    @GetMapping("/sort/sortByCategory")
+    public ResponseEntity<?> sortByCategory(@RequestParam("categoryID") Long categoryID) {
+        if (categoryRespository.findById(categoryID).isPresent()) {
+            Category category = categoryRespository.findById(categoryID).get();
+            List<Posts> posts = postRespository.findByCategory(category);
+            List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
+            for (Posts post : posts) {
+                postResponseDTOs.add(responseServices.postResponse(post));
+
+            }
+            return ResponseEntity.ok(postResponseDTOs);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+
+    }
+
+    // Lọc theo giá
+    @GetMapping("/sort/sortByPrice")
+    public ResponseEntity<?> sortByPrice(@RequestParam("minPrice") Float minPrice,
+            @RequestParam("maxPrice") Float maxPrice) {
+        List<Posts> posts = postRespository.findByPriceRange(minPrice, maxPrice);
+        List<PostResponseDTO> postResponseDTOs = new ArrayList<>();
+        for (Posts post : posts) {
+            postResponseDTOs.add(responseServices.postResponse(post));
+
+        }
+        return ResponseEntity.ok(postResponseDTOs);
+
+    }
+
+    // Lấy những người thích 1 bài viết
+    @GetMapping("/view/getNumberOfLike")
+    public ResponseEntity<?> getNumberOfLike(@RequestParam("postID") Long postID) {
+        Posts post = postRespository.findById(postID).get();
+        List<User> users = post.getLikedBy();
+        List<ProfileDTO> profileDTOs = new ArrayList<>();
+        for (User user : users) {
+            profileDTOs.add(responseServices.responseProfileDTO(user));
+
+        }
+        return ResponseEntity.ok(profileDTOs);
 
     }
 

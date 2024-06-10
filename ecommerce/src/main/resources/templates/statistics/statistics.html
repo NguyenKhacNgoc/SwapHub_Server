@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Thống kê</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        nav {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #333;
+            background-color: #f7f7f7;
+            border: 1px solid #333;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header_container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .container_input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .container_input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .container_btn button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .container_btn button:hover {
+            background-color: #555;
+        }
+
+        .result {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+            min-height: 200px;
+        }
+
+        /* CSS cho bảng */
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .user-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        .user-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .user-table tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Welcome to SWAP HUB</h1>
+    </header>
+    <nav>
+        <a href="/admin/getpendingpost">Duyệt bài viết</a>
+        <a href="/admin/getPendingReport">Danh sách tố cáo</a>
+        <a href="/admin/thongke">Thống kê</a>
+    </nav>
+    <div class="container">
+        <div class="header_container">
+            <h3>Số lượng người dùng: <span id="userCount"></span></h3>
+            <h3>Số lượng bài viết: <span id="postCount"></span></h3>
+            <h3>Số lượng người dùng vi phạm: <span id="viPhamCount"></span></h3>
+        </div>
+        <div class="container_input">
+            <input type="text" id="searchInput" placeholder="Nhấp vào đây..." />
+            <div class="container_btn">
+                <button type="button" onclick="findUser()">Người dùng</button>
+                <button type="button" onclick="findPost()">Bài viết</button>
+                <button type="button" onclick="findVipham()">Tố cáo | Vi phạm</button>
+            </div>
+        </div>
+        <div class="result">
+
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        checkAuth()
+
+    })
+
+    function checkAuth() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/api/auth/login")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 401) {
+                    localStorage.removeItem('token')
+                    window.location.href = '/admin/login'
+
+                }
+                fetchData()
+
+            }
+        }
+        xhr.send()
+    }
+    function fetchData() {
+        const token = localStorage.getItem('token')
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/admin/api/getStatistics")
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.response)
+                    document.getElementById("userCount").textContent = data.user
+                    document.getElementById("postCount").textContent = data.post
+                    document.getElementById("viPhamCount").textContent = data.vipham
+
+                }
+            }
+        }
+        xhr.send()
+
+    }
+    function findUser() {
+        const token = localStorage.getItem('token')
+        const email = document.getElementById('searchInput').value
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/admin/api/findUser?email=" + email)
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.response)
+                    //render thông tin người dùng ra giao diện của <div class="result">
+                    renderUserInfo(data)
+
+                }
+                else if (xhr.status === 404) {
+                    const resultDiv = document.querySelector('.result')
+                    resultDiv.innerHTML = ''
+
+                }
+            }
+        }
+        xhr.send()
+    }
+    function findPost() {
+        const token = localStorage.getItem('token')
+        const email = document.getElementById('searchInput').value
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/admin/api/findPost?email=" + email)
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.response)
+                    //render thông tin người dùng ra giao diện của <div class="result">
+                    console.log(data)
+                    renderPosts(data)
+                }
+                else if (xhr.status === 404) {
+                    const resultDiv = document.querySelector('.result')
+                    resultDiv.innerHTML = ''
+
+                }
+            }
+        }
+        xhr.send()
+
+    }
+    function findVipham() {
+        const token = localStorage.getItem('token')
+        const email = document.getElementById('searchInput').value
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "/admin/api/findVipham?email=" + email)
+        xhr.setRequestHeader("Authorization", "Bearer " + token)
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.response)
+                    //render thông tin người dùng ra giao diện của <div class="result">
+                    console.log(data)
+                    renderVipham(data)
+
+                }
+                else if (xhr.status === 404) {
+                    const resultDiv = document.querySelector('.result');
+                    resultDiv.innerHTML = ''
+
+                }
+            }
+        }
+        xhr.send()
+
+    }
+    function renderUserInfo(userInfo) {
+        const resultDiv = document.querySelector('.result')
+        // Xóa nội dung cũ trong div kết quả trước khi hiển thị thông tin mới
+        resultDiv.innerHTML = ''
+
+        // Tạo một bảng để hiển thị thông tin
+        const table = document.createElement('table')
+        table.classList.add('user-table')
+
+        // Tạo hàng tiêu đề cho bảng
+        const headerRow = table.createTHead().insertRow()
+
+        // Tiêu đề cho các cột
+        const headers = ['Tên', 'Email', 'Trạng thái']
+
+        headers.forEach(headerText => {
+            const header = document.createElement('th')
+            header.textContent = headerText
+            headerRow.appendChild(header)
+        });
+        // Tạo một hàng dữ liệu cho bảng
+        const dataRow = table.insertRow()
+        // Thêm dữ liệu vào các cột
+        const data = [
+            userInfo.fullName,
+            userInfo.email,
+            userInfo.status
+        ]
+
+        // data.forEach(value => {
+        //     const cell = dataRow.insertCell();
+        //     cell.textContent = value;
+        // });
+        // Tạo các ô dữ liệu trong hàng và bọc chúng trong thẻ <a>
+        data.forEach((value, index) => {
+            const cell = dataRow.insertCell();
+            if (index === 1) {
+                const link = document.createElement('a');
+                link.href = `/admin/getProfileUser?email=${userInfo.email}`
+                link.textContent = value;
+                link.target = '_blank'
+                cell.appendChild(link)
+            }
+            else {
+                cell.textContent = value
+            }
+        })
+
+        // Thêm bảng vào div kết quả
+        resultDiv.appendChild(table)
+    }
+    function renderPosts(posts) {
+        const resultDiv = document.querySelector('.result');
+        // Xóa nội dung cũ trong div kết quả trước khi hiển thị thông tin mới
+        resultDiv.innerHTML = ''
+
+        // Tạo một bảng để hiển thị thông tin
+        const table = document.createElement('table')
+        table.classList.add('user-table')
+
+        // Tạo hàng tiêu đề cho bảng
+        const headerRow = table.createTHead().insertRow()
+
+        // Tiêu đề cho các cột
+        const headers = ['ID', 'Tiêu đề', 'Thể loại', 'Người đăng']
+
+        headers.forEach(headerText => {
+            const header = document.createElement('th')
+            header.textContent = headerText
+            headerRow.appendChild(header)
+        });
+
+
+        // Duyệt qua từng bài đăng và tạo hàng dữ liệu cho bảng
+        posts.forEach(post => {
+            const dataRow = table.insertRow()
+            const data = [
+                post.id,
+                post.title,
+                post.category,
+                post.profile.fullName
+            ]
+
+            data.forEach((value, index) => {
+            const cell = dataRow.insertCell();
+            if (index === 1) {
+                const link = document.createElement('a');
+                link.href = `/admin/getPostOfReport?postID=${post.id}`
+                link.textContent = value;
+                link.target = '_blank'
+                cell.appendChild(link)
+            }
+            else {
+                cell.textContent = value
+            }
+        })
+        })
+
+        // Thêm bảng vào div kết quả
+        resultDiv.appendChild(table)
+
+    }
+    function renderVipham(vps) {
+        const resultDiv = document.querySelector('.result')
+        // Xóa nội dung cũ trong div kết quả trước khi hiển thị thông tin mới
+        resultDiv.innerHTML = ''
+
+        // Tạo một bảng để hiển thị thông tin
+        const table = document.createElement('table')
+        table.classList.add('user-table')
+
+        // Tạo hàng tiêu đề cho bảng
+        const headerRow = table.createTHead().insertRow()
+
+        // Tiêu đề cho các cột
+        const headers = ['ID', 'Người tố cáo', 'Bị cáo', 'Lý do', 'Gửi vào'];
+
+        headers.forEach(headerText => {
+            const header = document.createElement('th')
+            header.textContent = headerText
+            headerRow.appendChild(header)
+        });
+
+
+        // Duyệt qua từng bài đăng và tạo hàng dữ liệu cho bảng
+        vps.forEach(vp => {
+            const dataRow = table.insertRow()
+            const data = [
+                vp.id,
+                vp.accuser,
+                vp.accused,
+                vp.reason,
+                new Date(vp.sendAt).toLocaleDateString()
+            ]
+
+            data.forEach((value, index) => {
+            const cell = dataRow.insertCell();
+            if (index === 3) {
+                const link = document.createElement('a');
+                link.href = `/admin/reportdetail/${vp.id}`
+                link.textContent = value;
+                link.target = '_blank'
+                cell.appendChild(link)
+            }
+            else {
+                cell.textContent = value
+            }
+        })
+        })
+
+        // Thêm bảng vào div kết quả
+        resultDiv.appendChild(table)
+
+    }
+
+</script>
+
+</html>

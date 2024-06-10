@@ -3,13 +3,10 @@ package com.server.ecommerce.Services;
 import com.cloudinary.*;
 import com.cloudinary.utils.ObjectUtils;
 import com.server.ecommerce.DTO.ImageUploadResponse;
-import com.server.ecommerce.Entity.Images;
-
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Map;
 
 @Service
@@ -38,14 +35,5 @@ public class CloudinaryService {
 
     // Viết nhờ phương thức này ở đây, đáng lẽ phải viết ở service khác nhưng lười
     // tạo quá
-    public List<ImageUploadResponse> copyImagesToImageUploadResponses(List<Images> images) {
-        List<ImageUploadResponse> listImageUploadResponses = new ArrayList<>();
-        for (Images img : images) {
-            ImageUploadResponse imageUploadResponse = new ImageUploadResponse();
-            imageUploadResponse.setPublicID(img.getPublicID());
-            imageUploadResponse.setSecureUrl(img.getImgUrl());
-            listImageUploadResponses.add(imageUploadResponse);
-        }
-        return listImageUploadResponses;
-    }
+
 }

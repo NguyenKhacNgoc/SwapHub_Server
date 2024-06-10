@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập</title>
+</head>
+
+<body>
+    <h2 style="text-align:center">Đăng nhập</h2>
+    <form method="post" class="login-form" action="/admin/login" onsubmit="return validateForm()">
+        <input type="email" id="email" name="email" placeholder="Email" required
+            emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$ />
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <span id="error" style="color:red;">
+           
+        </span>
+        <br />
+        <button type="button" class="btn-login" onclick="onSubmit()">Login</button>
+    </form>
+
+
+</body>
+<script>
+    function validateForm() {
+
+        const password = document.getElementById("sPassword")
+
+        const error = document.getElementById("error")
+
+        if (password.value.length < 8 || !/\d/.test(password.value)) {
+            error.textContent = 'Mật khẩu bao gồm 8 ký tự và ít nhất 1 số'
+            return false
+        }
+        else {
+            error.parentNode.removeChild(error)
+            return true
+
+        }
+
+
+    }
+    function onSubmit() {
+        const email = document.getElementById('email').value
+        const password = document.getElementById('password').value
+        const request = {
+            email: email,
+            password: password,
+            
+        }
+        const xhr = new XMLHttpRequest()
+        xhr.open("POST", "/admin/login")
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText)
+                    const token = response.token
+                    localStorage.setItem('token', token)
+                    alert('Xác thực thành công')
+                    window.location.href = '/admin/home'
+                }
+                else {
+                    alert('Xác thực thất bại')
+                }
+            }
+        }
+        xhr.send(JSON.stringify(request))
+    }
+</script>
+<style>
+.login-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+    .login-form h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .login-form input[type="email"],
+    .login-form input[type="password"],
+    .login-form input[type="password"]:focus {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+
+    .login-form button {
+        background: #007bff;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 18px;
+        margin-top: 10px;
+    }
+
+        .login-form button:hover {
+            background: #0056b3;
+        }
+</style>
+
+</html>

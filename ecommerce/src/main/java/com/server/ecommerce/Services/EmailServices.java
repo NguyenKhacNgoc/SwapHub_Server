@@ -30,4 +30,19 @@ public class EmailServices {
 
     }
 
+    public void sendMessage(String to, String content) {
+        try {
+            jakarta.mail.internet.MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message);
+            helper.setFrom("khacngoc6969@gmail.com");
+            helper.setTo(to);
+            helper.setSubject("SwapHub support");
+            message.setText(content);
+            javaMailSender.send(message);
+
+        } catch (Exception e) {
+
+        }
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.server.ecommerce.DTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -15,7 +16,10 @@ public class PostResponseDTO {
     private String category;
     private String description;
     private Float price;
-    ProfileDTO Profile;
+    private String status;
+    private ProfileDTO profile;
     private List<ImageUploadResponse> images;
+    private List<ProfileDTO> likedBy;
+    private LocalDateTime postAt;
 
 }

@@ -1,6 +1,6 @@
 package com.server.ecommerce.Entity;
 
-import java.time.LocalDateTime;
+import com.google.cloud.Timestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,7 +28,7 @@ public class Message {
     @Column
     private Long receiverID;
     @Column
-    private LocalDateTime sendAt;
+    private Timestamp sendAt;
     @Column
     private boolean seen = false;
 }
