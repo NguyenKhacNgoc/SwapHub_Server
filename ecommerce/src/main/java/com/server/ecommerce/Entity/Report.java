@@ -23,8 +23,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class Report {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "accuser", referencedColumnName = "id")
     private User accuser;
