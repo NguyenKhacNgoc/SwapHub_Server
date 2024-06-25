@@ -3,6 +3,7 @@ package com.server.ecommerce.Services;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -103,5 +104,14 @@ public class UserService {
 
     public User getUserFromEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
+    public Boolean checkexistPNB(String phoneNumber) {
+        Optional<User> exUser = userRepository.findByPhoneNumber(phoneNumber);
+        if (exUser.isPresent()) {
+            return true;
+        } else
+            return false;
+
     }
 }

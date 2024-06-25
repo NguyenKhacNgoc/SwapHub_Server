@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.server.ecommerce.DTO.Request.idRequest;
 import com.server.ecommerce.DTO.Response.ApiResponse;
 import com.server.ecommerce.DTO.Response.PostResponseDTO;
+import com.server.ecommerce.Services.CategoryService;
 import com.server.ecommerce.Services.PostServices;
 
 @RestController
@@ -23,29 +24,25 @@ import com.server.ecommerce.Services.PostServices;
 public class PostController {
     @Autowired
     private PostServices postServices;
+    @Autowired
+    private CategoryService categoryService;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @GetMapping("/getCategory")
     public ApiResponse<?> getCategory() {
         ApiResponse apiResponse = new ApiResponse<>();
-        apiResponse.setResult(postServices.getAllCategory());
+        apiResponse.setResult(categoryService.getAllCategory());
         return apiResponse;
     }
 
-    // @GetMapping("/getNameCategory")
-    // public ResponseEntity<?> getNameCategory() {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @GetMapping("/getNameCategory")
+    public ApiResponse<?> getNameCategory() {
+        ApiResponse apiResponse = new ApiResponse<>();
+        apiResponse.setResult(categoryService.getAllNameCategory());
+        return apiResponse;
 
-    // List<Category> categories = categoryRespository.findAll();
-    // List<String> categoriesName = new ArrayList<>();
-    // categoriesName.add("Tất cả");
-    // for (Category category : categories) {
-    // String Strcategory = category.getName();
-    // categoriesName.add(Strcategory);
-    // }
-
-    // return ResponseEntity.ok(categoriesName);
-
-    // }
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @PostMapping("/createpost")

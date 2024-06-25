@@ -21,7 +21,6 @@ import com.server.ecommerce.Entity.User;
 import com.server.ecommerce.Exception.AppException;
 import com.server.ecommerce.Exception.ErrorCode;
 import com.server.ecommerce.Mapper.UserMapper;
-import com.server.ecommerce.Repository.CategoryRepository;
 import com.server.ecommerce.Repository.PostImageRepository;
 import com.server.ecommerce.Repository.PostRepository;
 
@@ -34,7 +33,7 @@ public class PostServices {
     @Autowired
     private PostRepository postRepository;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryService categoryService;
     @Autowired
     private CloudinaryService cloudinaryService;
     @Autowired
@@ -82,19 +81,10 @@ public class PostServices {
         return postResponseDTOs;
     }
 
-    public List<Category> getAllCategory() {
-        List<Category> categories = categoryRepository.findAll();
-        if (categories.isEmpty()) {
-            throw new AppException(ErrorCode.CATEGORY_NOT_EXIST);
-        }
-        return categories;
-    }
-
     public PostResponseDTO createNewPost(String category, String title, String description, Float price,
             List<MultipartFile> images) throws IOException {
         Posts post = Posts.builder()
-                .category(categoryRepository.findById(category)
-                        .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST)))
+                .category(categoryService.getCategoryById(category))
                 .description(description)
                 .price(price)
                 .title(title)
@@ -214,8 +204,7 @@ public class PostServices {
     }
 
     public List<PostResponseDTO> findByCategory(String categoryID) {
-        Category category = categoryRepository.findById(categoryID)
-                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST));
+        Category category = categoryService.getCategoryById(categoryID);
         List<Posts> posts = postRepository.findByCategory(category);
         if (posts.isEmpty()) {
             throw new AppException(ErrorCode.POST_NOT_EXIST);

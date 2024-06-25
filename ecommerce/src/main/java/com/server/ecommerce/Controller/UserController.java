@@ -73,6 +73,14 @@ public class UserController {
         apiResponse.setResult(userService.updateUser(request));
         return apiResponse;
     }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @GetMapping("/checkexistPNB")
+    public ApiResponse<?> checkexistPNB(@RequestParam("phoneNumber") String phoneNumber) {
+        ApiResponse apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.checkexistPNB(phoneNumber));
+        return apiResponse;
+    }
     /*
      * - Chức năng quên mật khẩu - Lúc nào làm
      */
