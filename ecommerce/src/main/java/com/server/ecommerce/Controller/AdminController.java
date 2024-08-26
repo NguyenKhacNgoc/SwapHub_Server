@@ -1,4 +1,4 @@
-package com.server.ecommerce.Controller;
+package com.server.ecommerce.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +16,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.server.ecommerce.DTO.Request.idRequest;
-import com.server.ecommerce.DTO.Response.ApiResponse;
-import com.server.ecommerce.Services.PostServices;
-import com.server.ecommerce.Services.ReportServices;
-import com.server.ecommerce.Services.UserService;
+
+import com.server.ecommerce.dto.request.idRequest;
+import com.server.ecommerce.dto.response.ApiResponse;
+import com.server.ecommerce.services.PostServices;
+import com.server.ecommerce.services.ReportServices;
+import com.server.ecommerce.services.UserService;
 
 import io.micrometer.core.instrument.util.IOUtils;
 

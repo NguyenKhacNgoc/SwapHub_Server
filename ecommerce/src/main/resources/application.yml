@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: swaphub
+
+  datasource:
+    url: jdbc:mysql://localhost:3308/swaphub
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8180/realms/swaphub
+        registration:
+          keycloak:
+            client-id: swaphub_server
+            client-secret: i1KQcGdylxQZDsyoxWrCgtu9mPYd5IEZ
+#Cấu hình brenvo
+spring:
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: 60161e003@smtp-brevo.com
+    password: YCLBkxaURyAcsMPK
+    properties:
+      mail:
+        smtp:
+        auth: true
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+keycloak:
+  auth-server-url: http://localhost:8180
+  realm: swaphub
+  resource: swaphub_server
+  credentials:
+    secret: i1KQcGdylxQZDsyoxWrCgtu9mPYd5IEZ
+  bearer-only: true
+  admin:
+    client-id: admin-cli
+    username: admin
+    password: admin
+  policy-enforcer-config:
+    enforcement-mode: ENFORCING

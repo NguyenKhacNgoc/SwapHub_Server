@@ -1,17 +1,18 @@
 package com.server.ecommerce.dto.response;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class thongkeResponse {
-    private Long user;
-    private Long post;
-    private Long vipham;
-
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class RoleResponse {
+    String name;
+    String description;
 }

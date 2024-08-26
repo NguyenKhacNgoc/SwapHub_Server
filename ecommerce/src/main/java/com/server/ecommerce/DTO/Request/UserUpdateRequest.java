@@ -1,4 +1,4 @@
-package com.server.ecommerce.DTO.Request;
+package com.server.ecommerce.dto.request;
 
 import java.util.Date;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class UserDTO {
+public class UserUpdateRequest {
     private String email;
     private String password;
     private String fullName;

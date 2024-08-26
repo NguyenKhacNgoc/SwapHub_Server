@@ -1,13 +1,13 @@
-package com.server.ecommerce.Services;
+package com.server.ecommerce.services;
 
 import com.cloudinary.*;
 import com.cloudinary.utils.ObjectUtils;
-import com.server.ecommerce.DTO.Response.ImageUploadResponse;
-import com.server.ecommerce.Entity.ImgPost;
-import com.server.ecommerce.Entity.Posts;
-import com.server.ecommerce.Exception.AppException;
-import com.server.ecommerce.Exception.ErrorCode;
-import com.server.ecommerce.Repository.PostImageRepository;
+import com.server.ecommerce.dto.response.ImageUploadResponse;
+import com.server.ecommerce.entity.ImgPost;
+import com.server.ecommerce.entity.Posts;
+import com.server.ecommerce.exception.AppException;
+import com.server.ecommerce.exception.ErrorCode;
+import com.server.ecommerce.repository.PostImageRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

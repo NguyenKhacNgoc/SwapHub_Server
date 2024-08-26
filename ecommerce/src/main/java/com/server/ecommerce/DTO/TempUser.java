@@ -1,4 +1,4 @@
-package com.server.ecommerce.DTO;
+package com.server.ecommerce.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

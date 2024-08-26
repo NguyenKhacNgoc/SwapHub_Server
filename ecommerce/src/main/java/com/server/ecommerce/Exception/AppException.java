@@ -1,4 +1,4 @@
-package com.server.ecommerce.Exception;
+package com.server.ecommerce.exception;
 
 public class AppException extends RuntimeException {
     private ErrorCode errorCode;

@@ -1,4 +1,4 @@
-package com.server.ecommerce.Repository;
+package com.server.ecommerce.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,11 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.server.ecommerce.Entity.Posts;
-import com.server.ecommerce.Entity.User;
-import com.server.ecommerce.Entity.Category;
+import com.server.ecommerce.entity.Posts;
+import com.server.ecommerce.entity.User;
+import com.server.ecommerce.entity.Category;
 
 public interface PostRepository extends JpaRepository<Posts, String> {
+
     @SuppressWarnings("null")
     @Query("SELECT p FROM Posts p WHERE p.id = :id")
     Optional<Posts> findById(@Param("id") String id);

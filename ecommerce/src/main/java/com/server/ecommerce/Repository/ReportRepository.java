@@ -1,4 +1,4 @@
-package com.server.ecommerce.Repository;
+package com.server.ecommerce.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,9 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.server.ecommerce.Entity.Report;
+import com.server.ecommerce.entity.Report;
 
 public interface ReportRepository extends JpaRepository<Report, String> {
+
     @SuppressWarnings("null")
     @Query("SELECT r FROM Report r WHERE r.id = :id")
     Optional<Report> findById(@Param("id") String id);

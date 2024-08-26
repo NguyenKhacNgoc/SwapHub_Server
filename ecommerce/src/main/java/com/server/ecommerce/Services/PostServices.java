@@ -1,4 +1,4 @@
-package com.server.ecommerce.Services;
+package com.server.ecommerce.services;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -10,19 +10,19 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import com.server.ecommerce.DTO.Request.idRequest;
-import com.server.ecommerce.DTO.Response.ImageUploadResponse;
-import com.server.ecommerce.DTO.Response.PostResponseDTO;
-import com.server.ecommerce.DTO.Response.UserDTOResponse;
-import com.server.ecommerce.Entity.Category;
-import com.server.ecommerce.Entity.ImgPost;
-import com.server.ecommerce.Entity.Posts;
-import com.server.ecommerce.Entity.User;
-import com.server.ecommerce.Exception.AppException;
-import com.server.ecommerce.Exception.ErrorCode;
-import com.server.ecommerce.Mapper.UserMapper;
-import com.server.ecommerce.Repository.PostImageRepository;
-import com.server.ecommerce.Repository.PostRepository;
+import com.server.ecommerce.dto.request.idRequest;
+import com.server.ecommerce.dto.response.ImageUploadResponse;
+import com.server.ecommerce.dto.response.PostResponseDTO;
+import com.server.ecommerce.dto.response.UserDTOResponse;
+import com.server.ecommerce.entity.Category;
+import com.server.ecommerce.entity.ImgPost;
+import com.server.ecommerce.entity.Posts;
+import com.server.ecommerce.entity.User;
+import com.server.ecommerce.exception.AppException;
+import com.server.ecommerce.exception.ErrorCode;
+import com.server.ecommerce.mapper.UserMapper;
+import com.server.ecommerce.repository.PostImageRepository;
+import com.server.ecommerce.repository.PostRepository;
 
 @Service
 public class PostServices {

@@ -1,4 +1,4 @@
-package com.server.ecommerce.DTO;
+package com.server.ecommerce.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,9 +1,9 @@
-package com.server.ecommerce.DTO.Response;
+package com.server.ecommerce.dto.response;
 
 import java.util.Date;
 import java.util.Set;
 
-import com.server.ecommerce.Entity.Address;
+import com.server.ecommerce.entity.Address;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

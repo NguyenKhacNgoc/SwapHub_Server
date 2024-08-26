@@ -1,4 +1,4 @@
-package com.server.ecommerce.Services;
+package com.server.ecommerce.services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -6,20 +6,20 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import com.server.ecommerce.DTO.Request.idRequest;
-import com.server.ecommerce.DTO.Response.DetailReportResponse;
-import com.server.ecommerce.DTO.Response.ImageUploadResponse;
-import com.server.ecommerce.DTO.Response.ReportResponse;
-import com.server.ecommerce.DTO.Response.thongkeResponse;
-import com.server.ecommerce.Entity.ImgReport;
-import com.server.ecommerce.Entity.Report;
-import com.server.ecommerce.Entity.User;
-import com.server.ecommerce.Exception.AppException;
-import com.server.ecommerce.Exception.ErrorCode;
-import com.server.ecommerce.Repository.ImgReportRepository;
-import com.server.ecommerce.Repository.PostRepository;
-import com.server.ecommerce.Repository.ReportRepository;
-import com.server.ecommerce.Repository.UserRepository;
+import com.server.ecommerce.dto.request.idRequest;
+import com.server.ecommerce.dto.response.DetailReportResponse;
+import com.server.ecommerce.dto.response.ImageUploadResponse;
+import com.server.ecommerce.dto.response.ReportResponse;
+import com.server.ecommerce.dto.response.thongkeResponse;
+import com.server.ecommerce.entity.ImgReport;
+import com.server.ecommerce.entity.Report;
+import com.server.ecommerce.entity.User;
+import com.server.ecommerce.exception.AppException;
+import com.server.ecommerce.exception.ErrorCode;
+import com.server.ecommerce.repository.ImgReportRepository;
+import com.server.ecommerce.repository.PostRepository;
+import com.server.ecommerce.repository.ReportRepository;
+import com.server.ecommerce.repository.UserRepository;
 
 @Service
 public class ReportServices {
